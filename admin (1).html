@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>অ্যাডমিন</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+body { margin: 0; }
+[hidden] { display: none !important; }
+
+/* Layout: centered auth cards; dashboard with summary tiles, withdraw panel, history; admin panel with tab bar and tables */
+:root {
+  --bg: #f1f5f3;
+  --surface: #ffffff;
+  --fg: #11231d;
+  --muted: #5b6e66;
+  --line: #d9e3de;
+  --accent: #0d6b57;
+  --accent-fg: #ffffff;
+  --accent-soft: #dff1ea;
+  --gold: #b7791f;
+  --gold-soft: #fbf0d9;
+  --bad: #b42318;
+  --bad-soft: #fde8e6;
+  --good: #137a3f;
+  --font-body: "Hind Siliguri", "Noto Sans Bengali", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0c1613; --surface: #13211d; --fg: #e6f1ec; --muted: #93a79e; --line: #25382f;
+    --accent: #3cc3a0; --accent-fg: #06201a; --accent-soft: #163429;
+    --gold: #e3a94a; --gold-soft: #2e2512; --bad: #ff8a7d; --bad-soft: #3a1b18; --good: #5fd48a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0c1613; --surface: #13211d; --fg: #e6f1ec; --muted: #93a79e; --line: #25382f;
+  --accent: #3cc3a0; --accent-fg: #06201a; --accent-soft: #163429;
+  --gold: #e3a94a; --gold-soft: #2e2512; --bad: #ff8a7d; --bad-soft: #3a1b18; --good: #5fd48a;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px; line-height: 1.6; padding-inline: 16px; padding-block: 0; min-height: 100%; }
+h1, h2, h3, p { margin: 0; text-wrap: balance; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* Auth */
+.auth { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding-block: 32px; }
+.auth-wrap { width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 20px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.35rem; }
+.brand-mark { width: 36px; height: 36px; border-radius: 10px; background: var(--accent); display: grid; place-items: center; flex: none; }
+.brand-mark svg { width: 20px; height: 20px; stroke: var(--accent-fg); fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 28px 24px; display: flex; flex-direction: column; gap: 20px; box-shadow: 0 8px 28px rgba(8, 40, 30, .07); }
+.card h1 { font-size: 1.6rem; line-height: 1.3; }
+.card .sub { color: var(--muted); font-size: .95rem; margin-top: 4px; }
+form { display: flex; flex-direction: column; gap: 16px; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field label, .lab { font-weight: 600; font-size: .92rem; }
+.field label .opt { color: var(--muted); font-weight: 400; }
+.input { display: flex; align-items: center; background: var(--bg); border: 1.5px solid var(--line); border-radius: 10px; min-width: 0; }
+.input:focus-within { border-color: var(--accent); }
+.input input, .input select { flex: 1; min-width: 0; background: transparent; border: 0; padding: 11px 14px; outline: 0; font-size: 1rem; }
+.input select option { background: var(--surface); color: var(--fg); }
+.input .prefix { padding-left: 14px; color: var(--muted); font-family: var(--font-mono); font-size: .9rem; }
+.input .prefix + input { padding-left: 8px; }
+textarea.input { display: block; width: 100%; padding: 11px 14px; resize: vertical; font-family: var(--font-mono); font-size: .8rem; line-height: 1.5; outline: 0; }
+textarea.input:focus { border-color: var(--accent); }
+.toggle { background: transparent; border: 0; padding: 8px 14px; color: var(--accent); font-weight: 600; cursor: pointer; font-size: .88rem; }
+.hint { font-size: .82rem; color: var(--muted); }
+.err { background: var(--bad-soft); color: var(--bad); border-radius: 10px; padding: 10px 14px; font-size: .92rem; }
+.ok { background: var(--accent-soft); color: var(--accent); border-radius: 10px; padding: 10px 14px; font-size: .92rem; }
+.btn { background: var(--accent); color: var(--accent-fg); border: 0; border-radius: 10px; padding: 13px 18px; font-weight: 700; font-size: 1.02rem; cursor: pointer; }
+.btn:hover { filter: brightness(1.08); }
+.btn:disabled { opacity: .55; cursor: default; filter: none; }
+.btn.ghost { background: transparent; color: var(--fg); border: 1.5px solid var(--line); padding: 8px 14px; font-size: .92rem; font-weight: 600; }
+.btn.sm { padding: 6px 12px; font-size: .85rem; border-radius: 8px; }
+.btn.danger { background: var(--bad-soft); color: var(--bad); border: 1.5px solid var(--bad); }
+.switch { text-align: center; color: var(--muted); font-size: .95rem; }
+.switch button { background: none; border: 0; color: var(--accent); font-weight: 700; cursor: pointer; padding: 0 4px; font-size: inherit; }
+.row2 { display: grid; grid-template-columns: 1fr; gap: 16px; }
+.tiny-link { text-align: center; }
+.tiny-link button { background: none; border: 0; color: var(--muted); font-size: .82rem; cursor: pointer; text-decoration: underline; }
+
+/* Dashboard */
+.dash, .admin { max-width: 1040px; margin-inline: auto; padding-block: 0 48px; display: flex; flex-direction: column; gap: 24px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 18px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.who { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-weight: 700; flex: none; }
+.who-name { font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
+.who-phone { color: var(--muted); font-size: .85rem; font-family: var(--font-mono); }
+.dash h2, .admin h2 { font-size: 1.7rem; line-height: 1.3; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.tile .lbl { color: var(--muted); font-size: .88rem; }
+.tile .val { font-size: 1.8rem; font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.tile.main { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.tile.main .lbl { color: inherit; opacity: .85; }
+.tile.gold { background: var(--gold-soft); }
+.ref { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; justify-content: space-between; background: var(--gold-soft); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+.ref .code { font-family: var(--font-mono); font-size: 1.35rem; letter-spacing: .06em; color: var(--gold); font-weight: 500; overflow-wrap: anywhere; }
+.ref .lbl { color: var(--muted); font-size: .88rem; }
+.notice { background: var(--accent-soft); color: var(--accent); border-radius: 12px; padding: 12px 16px; font-weight: 500; }
+.cols { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.panel h3 { font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tag { font-size: .75rem; background: var(--accent-soft); color: var(--accent); padding: 2px 10px; border-radius: 999px; font-weight: 600; }
+.list { display: flex; flex-direction: column; }
+.item { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-block: 12px; border-top: 1px solid var(--line); }
+.item:first-child { border-top: 0; }
+.item > div { min-width: 0; }
+.item .t { font-weight: 600; overflow-wrap: anywhere; }
+.item .d { color: var(--muted); font-size: .84rem; }
+.item .amt { font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; }
+.amt.in { color: var(--good); }
+.amt.out { color: var(--bad); }
+.pill { font-size: .75rem; padding: 2px 9px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 600; white-space: nowrap; }
+.pill.wait { background: var(--gold-soft); color: var(--gold); }
+.pill.no { background: var(--bad-soft); color: var(--bad); }
+.note { color: var(--muted); font-size: .85rem; }
+.empty { color: var(--muted); padding-block: 8px; font-size: .92rem; }
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 10px 18px; border-radius: 10px; font-size: .92rem; z-index: 10; max-width: calc(100% - 32px); text-align: center; }
+
+/* Admin */
+.tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.tabs button { flex: none; background: var(--surface); border: 1.5px solid var(--line); border-radius: 999px; padding: 7px 16px; cursor: pointer; font-weight: 600; font-size: .92rem; }
+.tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+.tbl-wrap { overflow-x: auto; }
+.tbl { width: 100%; border-collapse: collapse; font-size: .92rem; min-width: 560px; }
+.tbl th { text-align: left; color: var(--muted); font-weight: 600; font-size: .8rem; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.tbl td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.tbl td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.form-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+.chk { display: flex; align-items: center; gap: 10px; font-weight: 500; }
+.chk input { width: 18px; height: 18px; accent-color: var(--accent); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+@media (min-width: 520px) { .row2, .form-grid { grid-template-columns: 1fr 1fr; } .card { padding: 32px; } }
+@media (min-width: 820px) { .cols { grid-template-columns: 1fr 1fr; } }
+@media (prefers-reduced-motion: no-preference) { .card { animation: rise .35s ease-out both; } @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } } }
+</style>
+</head>
+<body>
+<main>
+<section class="auth" id="view-gate">
+    <div class="auth-wrap">
+      <div class="brand"><span class="brand-mark"><svg viewBox="0 0 24 24"><path d="M4 17l5-5 4 4 7-8"/><path d="M15 8h5v5"/></svg></span><span><span data-site>ফান্ডলাইন</span> · অ্যাডমিন</span></div>
+      <div class="card">
+        <div>
+          <h1 id="ag-title">অ্যাডমিন লগইন</h1>
+          <p class="sub" id="ag-sub">অ্যাডমিনের ইমেইল ও পাসওয়ার্ড দিন।</p>
+        </div>
+        <form id="ag-form" novalidate>
+          <div class="field">
+            <label for="ag-email">ইমেইল</label>
+            <div class="input"><input id="ag-email" type="email" autocomplete="username" placeholder="admin@example.com"></div>
+          </div>
+          <div class="field">
+            <label for="ag-pass">পাসওয়ার্ড</label>
+            <div class="input"><input id="ag-pass" type="password" autocomplete="current-password" placeholder="পাসওয়ার্ড"><button type="button" class="toggle" data-toggle="ag-pass">দেখান</button></div>
+          </div>
+          <div class="field" id="ag-confirm" hidden>
+            <label for="ag-pass2">পাসওয়ার্ড আবার দিন</label>
+            <div class="input"><input id="ag-pass2" type="password" autocomplete="new-password" placeholder="একই পাসওয়ার্ড"></div>
+          </div>
+          <div class="err" id="ag-err" role="alert" hidden></div>
+          <button class="btn" id="ag-btn" type="submit">প্রবেশ করুন</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="admin" id="view-admin" hidden>
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark"><svg viewBox="0 0 24 24"><path d="M4 17l5-5 4 4 7-8"/><path d="M15 8h5v5"/></svg></span><span><span data-site>ফান্ডলাইন</span> · অ্যাডমিন</span></div>
+      <div class="actions">
+        <button class="btn ghost" type="button" id="a-refresh">রিফ্রেশ</button>
+        <button class="btn ghost" type="button" id="admin-out">লগআউট</button>
+      </div>
+    </header>
+    <nav class="tabs" id="a-tabs" role="tablist">
+      <button type="button" role="tab" data-tab="overview">সারসংক্ষেপ</button>
+      <button type="button" role="tab" data-tab="users">ব্যবহারকারী</button>
+      <button type="button" role="tab" data-tab="wds">টাকা তোলা</button>
+      <button type="button" role="tab" data-tab="settings">সেটিংস</button>
+      <button type="button" role="tab" data-tab="cards">নতুন কার্ড</button>
+      <button type="button" role="tab" data-tab="export">এক্সপোর্ট</button>
+    </nav>
+    <div id="a-body" style="display:flex;flex-direction:column;gap:16px"></div>
+  </section>
+
+</main>
+<div class="toast" id="toast" hidden></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function () {
+  var SUPABASE_URL = 'https://vuzfmiqfkwhflnawadxf.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_nThs5-zeKUvkiI-OIfKPQA_htbdEQuX';
+  var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  var bn = '০১২৩৪৫৬৭৮৯';
+  function toBn(n) { return String(n).replace(/\d/g, function (d) { return bn[d]; }); }
+  function toEn(s) { return String(s || '').replace(/[০-৯]/g, function (d) { return bn.indexOf(d); }); }
+  function taka(n) { return '৳ ' + toBn((Math.round((Number(n) || 0) * 100) / 100).toLocaleString('en-US')); }
+  function fmtDate(t) { var d = new Date(t); return isNaN(d) ? '—' : d.toLocaleDateString('bn-BD', { day: 'numeric', month: 'short', year: 'numeric' }); }
+  function showErr(el, msg) { el.textContent = msg; el.hidden = false; }
+  function toast(msg) {
+    var t = $('toast'); t.textContent = msg; t.hidden = false;
+    clearTimeout(toast.h); toast.h = setTimeout(function () { t.hidden = true; }, 2600);
+  }
+  var ERR = {
+    not_admin: 'আপনার অ্যাডমিন অনুমতি নেই।', no_profile: 'ব্যবহারকারী পাওয়া যায়নি।', not_pending: 'এই অনুরোধ আগেই নিষ্পত্তি হয়েছে।',
+    short_pass: 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।', is_admin_user: 'অ্যাডমিন অ্যাকাউন্ট মোছা যায় না।', admin_exists: 'অ্যাডমিন আগেই তৈরি হয়ে গেছে।'
+  };
+  function errText(e) {
+    var m = (e && e.message) || '';
+    for (var k in ERR) { if (m.indexOf(k) > -1) return ERR[k]; }
+    return 'সমস্যা হয়েছে: ' + (m || 'আবার চেষ্টা করুন');
+  }
+
+  var S = { site_name: 'ফান্ডলাইন', bonus: 50, min_withdraw: 50, withdraw_on: true, reg_on: true, notice: '' };
+  var tab = 'overview', query = '', wdFilter = 'pending', confirmKey = null;
+  var users = [], wds = [], cards = [], setupMode = false;
+
+  function showView(gate) { $('view-gate').hidden = !gate; $('view-admin').hidden = gate; window.scrollTo(0, 0); }
+  function applySite() {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-site]'), function (el) { el.textContent = S.site_name; });
+    document.title = S.site_name + ' · অ্যাডমিন';
+  }
+
+  /* ---------- প্রবেশ ---------- */
+  async function initGate() {
+    var ex = await sb.rpc('admin_exists');
+    setupMode = !ex.error && ex.data === false;
+    $('ag-title').textContent = setupMode ? 'অ্যাডমিন অ্যাকাউন্ট খুলুন' : 'অ্যাডমিন লগইন';
+    $('ag-sub').textContent = setupMode ? 'এখনো কোনো অ্যাডমিন নেই। এখন যে ইমেইল ও পাসওয়ার্ড দেবেন সেটাই অ্যাডমিন হবে। নিজে এখনই খুলে ফেলুন।' : 'অ্যাডমিনের ইমেইল ও পাসওয়ার্ড দিন।';
+    $('ag-confirm').hidden = !setupMode;
+    $('ag-btn').textContent = setupMode ? 'অ্যাডমিন অ্যাকাউন্ট খুলুন' : 'প্রবেশ করুন';
+    showView(true);
+  }
+  async function enter() {
+    var r = await sb.rpc('is_admin');
+    if (r.error || !r.data) { await sb.auth.signOut(); showView(true); return false; }
+    var st = await sb.from('settings').select('*').eq('id', 1).maybeSingle();
+    if (st.data) S = st.data;
+    applySite(); showView(false); await renderTab();
+    return true;
+  }
+  document.addEventListener('click', function (e) {
+    var tg = e.target.closest('[data-toggle]');
+    if (tg) { var inp = $(tg.getAttribute('data-toggle')); var h = inp.type === 'password'; inp.type = h ? 'text' : 'password'; tg.textContent = h ? 'লুকান' : 'দেখান'; }
+  });
+  $('ag-form').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var err = $('ag-err'); err.hidden = true;
+    var email = $('ag-email').value.trim(), pass = $('ag-pass').value;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showErr(err, 'সঠিক ইমেইল দিন।');
+    if (pass.length < 6) return showErr(err, 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।');
+    var btn = $('ag-btn'); btn.disabled = true;
+    try {
+      if (setupMode) {
+        if (pass !== $('ag-pass2').value) throw { message: 'mismatch' };
+        var su = await sb.auth.signUp({ email: email, password: pass });
+        if (su.error) {
+          if (/already|registered/i.test(su.error.message)) { var si = await sb.auth.signInWithPassword({ email: email, password: pass }); if (si.error) throw si.error; }
+          else throw su.error;
+        } else if (!su.data.session) throw { message: 'confirm_on' };
+        var cl = await sb.rpc('claim_admin'); if (cl.error) throw cl.error;
+      } else {
+        var r = await sb.auth.signInWithPassword({ email: email, password: pass });
+        if (r.error) throw { message: 'bad_login' };
+      }
+      $('ag-form').reset();
+      var ok = await enter();
+      if (!ok) showErr(err, 'এই অ্যাকাউন্টটি অ্যাডমিন নয়।');
+    } catch (x) {
+      var m = (x && x.message) || '';
+      if (m === 'mismatch') showErr(err, 'দুটি পাসওয়ার্ড মিলছে না।');
+      else if (m === 'bad_login') showErr(err, 'ইমেইল বা পাসওয়ার্ড ভুল হয়েছে।');
+      else if (m === 'confirm_on') showErr(err, 'Supabase-এ Authentication → Sign In / Providers → Email এ গিয়ে “Confirm email” বন্ধ করুন, তারপর আবার চেষ্টা করুন।');
+      else showErr(err, errText(x));
+    }
+    btn.disabled = false;
+  });
+  $('admin-out').addEventListener('click', async function () { await sb.auth.signOut(); initGate(); });
+  $('a-refresh').addEventListener('click', function () { renderTab(); toast('নতুন তথ্য আনা হয়েছে'); });
+
+  /* ---------- ট্যাব ---------- */
+  $('a-tabs').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-tab]'); if (!b) return;
+    tab = b.getAttribute('data-tab'); renderTab();
+  });
+  function tile(l, v, cls) { return '<div class="tile ' + (cls || '') + '"><span class="lbl">' + l + '</span><span class="val">' + v + '</span></div>'; }
+  function fld(id, label, val, type, ro) { return '<div class="field"><label for="' + id + '">' + label + '</label><div class="input"><input id="' + id + '" type="' + (type || 'text') + '"' + (type === 'number' ? ' step="any"' : '') + ' value="' + esc(val) + '"' + (ro ? ' readonly' : '') + '></div></div>'; }
+
+  async function loadUsers() { var r = await sb.from('profiles').select('*').order('created_at', { ascending: false }).limit(5000); users = r.data || []; }
+  async function loadWds() { var r = await sb.from('withdrawals').select('*').order('id', { ascending: false }).limit(1000); wds = r.data || []; }
+  async function loadCards() { var r = await sb.from('cards').select('*').order('id'); cards = r.data || []; }
+
+  async function renderTab() {
+    Array.prototype.forEach.call($('a-tabs').children, function (b) { b.setAttribute('aria-selected', b.getAttribute('data-tab') === tab ? 'true' : 'false'); });
+    var body = $('a-body');
+    if (tab === 'overview') { await Promise.all([loadUsers(), loadWds()]); body.innerHTML = tOverview(); }
+    else if (tab === 'users') { await loadUsers(); body.innerHTML = tUsers(); drawUsers(); }
+    else if (tab === 'wds') { await loadWds(); body.innerHTML = tWds(); }
+    else if (tab === 'settings') body.innerHTML = tSettings();
+    else if (tab === 'cards') { await loadCards(); body.innerHTML = tCards(); }
+    else if (tab === 'export') { await loadUsers(); body.innerHTML = tExport(); }
+  }
+
+  function tOverview() {
+    var bal = 0, refs = 0;
+    users.forEach(function (u) { bal += Number(u.balance); refs += u.refs; });
+    var pend = wds.filter(function (w) { return w.status === 'pending'; });
+    var pendSum = pend.reduce(function (s, w) { return s + Number(w.amount); }, 0);
+    return '<h2>সারসংক্ষেপ</h2><div class="grid">' +
+      tile('মোট ব্যবহারকারী', toBn(users.length), 'main') + tile('মোট রেফার', toBn(refs)) +
+      tile('ব্যবহারকারীদের মোট ব্যালেন্স', taka(bal)) + tile('অপেক্ষমান উত্তোলন', toBn(pend.length) + ' টি · ' + taka(pendSum), 'gold') +
+      '</div><div class="panel"><h3>বর্তমান নিয়ম</h3><div class="list">' +
+      '<div class="item"><span>প্রতি রেফার বোনাস</span><b>' + taka(S.bonus) + '</b></div>' +
+      '<div class="item"><span>সর্বনিম্ন উত্তোলন</span><b>' + taka(S.min_withdraw) + '</b></div>' +
+      '<div class="item"><span>উত্তোলন</span><b>' + (S.withdraw_on ? 'চালু' : 'বন্ধ') + '</b></div>' +
+      '<div class="item"><span>নতুন রেজিস্ট্রেশন</span><b>' + (S.reg_on ? 'চালু' : 'বন্ধ') + '</b></div>' +
+      '</div><p class="note">এগুলো “সেটিংস” ট্যাব থেকে বদলানো যায়।</p></div>';
+  }
+
+  function tUsers() {
+    return '<h2>ব্যবহারকারী</h2><div class="panel"><div class="input"><input id="a-q" type="search" placeholder="নাম বা নম্বর দিয়ে খুঁজুন" value="' + esc(query) + '"></div></div><div id="a-edit"></div><div class="panel"><div class="tbl-wrap" id="a-utbl"></div></div>';
+  }
+  function drawUsers() {
+    var q = query.toLowerCase();
+    var rows = users.filter(function (u) { return !q || u.name.toLowerCase().indexOf(q) > -1 || u.phone.indexOf(toEn(q)) > -1; });
+    $('a-utbl').innerHTML = rows.length ? '<table class="tbl"><thead><tr><th>নাম</th><th>মোবাইল</th><th>ব্যালেন্স</th><th>রেফার</th><th>অবস্থা</th><th></th></tr></thead><tbody>' + rows.map(function (u) {
+      return '<tr><td>' + esc(u.name) + '</td><td class="num">' + esc(u.phone) + '</td><td class="num">' + taka(u.balance) + '</td><td class="num">' + toBn(u.refs) + '</td><td><span class="pill ' + (u.status === 'blocked' ? 'no' : '') + '">' + (u.status === 'blocked' ? 'বন্ধ' : 'সক্রিয়') + '</span></td><td><button type="button" class="btn ghost sm" data-act="edit-user" data-id="' + esc(u.id) + '">সম্পাদনা</button></td></tr>';
+    }).join('') + '</tbody></table>' : '<div class="empty">কোনো ব্যবহারকারী পাওয়া যায়নি।</div>';
+  }
+  function userForm(u) {
+    return '<div class="panel"><h3>' + esc(u.name) + ' সম্পাদনা</h3><div class="form-grid">' +
+      fld('e-name', 'নাম', u.name) + fld('e-phone', 'মোবাইল (বদলানো যায় না)', u.phone, 'text', true) + fld('e-email', 'ইমেইল', u.email) +
+      fld('e-balance', 'ব্যালেন্স (৳)', u.balance, 'number') + fld('e-income', 'মোট আয় (৳)', u.income, 'number') + fld('e-refs', 'রেফার সংখ্যা', u.refs, 'number') +
+      fld('e-code', 'রেফারেন্স কোড', u.code, 'text', true) +
+      '<div class="field"><label for="e-status">অবস্থা</label><div class="input"><select id="e-status"><option value="active"' + (u.status !== 'blocked' ? ' selected' : '') + '>সক্রিয়</option><option value="blocked"' + (u.status === 'blocked' ? ' selected' : '') + '>বন্ধ</option></select></div></div>' +
+      '</div><div class="err" id="e-err" role="alert" hidden></div><div class="actions"><button type="button" class="btn" data-act="save-user" data-id="' + esc(u.id) + '">সংরক্ষণ</button><button type="button" class="btn ghost" data-act="cancel-edit">বাতিল</button><button type="button" class="btn danger" data-act="del-user" data-id="' + esc(u.id) + '">মুছে ফেলুন</button></div>' +
+      '<div class="form-grid" style="border-top:1px solid var(--line);padding-top:14px">' + fld('e-pass', 'নতুন পাসওয়ার্ড দিন', '', 'text') + '<div class="field" style="justify-content:flex-end"><button type="button" class="btn ghost" data-act="set-pass" data-id="' + esc(u.id) + '">পাসওয়ার্ড বদলান</button></div></div></div>';
+  }
+
+  function tWds() {
+    var list = wds.filter(function (w) { return wdFilter === 'all' || w.status === wdFilter; });
+    var opts = [['pending', 'অপেক্ষমান'], ['paid', 'পরিশোধিত'], ['rejected', 'বাতিল'], ['all', 'সব']];
+    return '<h2>টাকা তোলার অনুরোধ</h2><div class="panel"><div class="actions">' + opts.map(function (o) { return '<button type="button" class="btn sm ' + (wdFilter === o[0] ? '' : 'ghost') + '" data-act="wd-filter" data-id="' + o[0] + '">' + o[1] + '</button>'; }).join('') + '</div>' +
+      (list.length ? '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>ব্যবহারকারী</th><th>পরিমাণ</th><th>মাধ্যম</th><th>নম্বর</th><th>তারিখ</th><th></th></tr></thead><tbody>' + list.map(function (w) {
+        var act = w.status === 'pending' ? '<div class="actions"><button type="button" class="btn sm" data-act="wd-pay" data-id="' + w.id + '">পরিশোধ হয়েছে</button><button type="button" class="btn danger sm" data-act="wd-rej" data-id="' + w.id + '">বাতিল</button></div>' : '<span class="pill ' + (w.status === 'paid' ? '' : 'no') + '">' + (w.status === 'paid' ? 'পরিশোধিত' : 'বাতিল') + '</span>';
+        return '<tr><td>' + esc(w.name) + '<div class="note">' + esc(w.phone) + '</div></td><td class="num">' + taka(w.amount) + '</td><td>' + esc(w.method) + '</td><td class="num">' + esc(w.account) + '</td><td class="num">' + fmtDate(w.created_at) + '</td><td>' + act + '</td></tr>';
+      }).join('') + '</tbody></table></div>' : '<div class="empty">এই তালিকায় কিছু নেই।</div>') +
+      '<p class="note">“পরিশোধ হয়েছে” চাপার আগে বিকাশ/নগদ/রকেটে নিজে টাকা পাঠিয়ে নিন। বাতিল করলে টাকা ব্যবহারকারীর ব্যালেন্সে ফেরত যাবে।</p></div>';
+  }
+
+  function tSettings() {
+    return '<h2>সেটিংস</h2><div class="panel"><div class="form-grid">' +
+      fld('s-name', 'সাইটের নাম', S.site_name) + fld('s-bonus', 'প্রতি রেফার বোনাস (৳)', S.bonus, 'number') + fld('s-min', 'সর্বনিম্ন উত্তোলন (৳)', S.min_withdraw, 'number') +
+      '</div><div class="field"><label for="s-notice">ড্যাশবোর্ডের ঘোষণা <span style="font-weight:400;color:var(--muted)">(খালি রাখলে দেখাবে না)</span></label><div class="input"><input id="s-notice" type="text" value="' + esc(S.notice) + '" placeholder="সবাইকে দেখানোর বার্তা"></div></div>' +
+      '<label class="chk"><input type="checkbox" id="s-wd"' + (S.withdraw_on ? ' checked' : '') + '> টাকা তোলা চালু</label>' +
+      '<label class="chk"><input type="checkbox" id="s-reg"' + (S.reg_on ? ' checked' : '') + '> নতুন রেজিস্ট্রেশন চালু</label>' +
+      '<div class="actions"><button type="button" class="btn" data-act="save-settings">সংরক্ষণ</button></div></div>' +
+      '<div class="panel"><h3>আপনার অ্যাডমিন পাসওয়ার্ড বদলান</h3><div class="form-grid">' + fld('p-new', 'নতুন পাসওয়ার্ড', '', 'password') + fld('p-new2', 'আবার দিন', '', 'password') + '</div><div class="err" id="p-err" role="alert" hidden></div><div class="actions"><button type="button" class="btn" data-act="save-pass">পাসওয়ার্ড বদলান</button></div></div>';
+  }
+
+  function tCards() {
+    return '<h2>ড্যাশবোর্ডে নতুন কার্ড</h2><div class="panel"><p class="note">এখানে যে কার্ড যোগ করবেন তা সব ব্যবহারকারীর ড্যাশবোর্ডে দেখাবে। যেমন: “আজকের অফার”, “সাপোর্ট নম্বর”, “মোট সদস্য”।</p><div class="form-grid">' + fld('c-title', 'শিরোনাম', '') + fld('c-value', 'মান / লেখা', '') + '</div>' +
+      '<label class="chk"><input type="checkbox" id="c-hl"> হাইলাইট করুন</label><div class="err" id="c-err" role="alert" hidden></div><div class="actions"><button type="button" class="btn" data-act="add-card">কার্ড যোগ করুন</button></div></div>' +
+      '<div class="panel"><h3>বর্তমান কার্ড</h3>' + (cards.length ? '<div class="list">' + cards.map(function (c) {
+        return '<div class="item"><div><div class="t">' + esc(c.title) + '</div><div class="d">' + esc(c.value) + (c.visible ? '' : ' · লুকানো') + '</div></div><div class="actions"><button type="button" class="btn ghost sm" data-act="card-toggle" data-id="' + c.id + '">' + (c.visible ? 'লুকান' : 'দেখান') + '</button><button type="button" class="btn danger sm" data-act="card-del" data-id="' + c.id + '">মুছুন</button></div></div>';
+      }).join('') + '</div>' : '<div class="empty">এখনো কোনো কার্ড যোগ করা হয়নি।</div>') + '</div>';
+  }
+
+  function tExport() {
+    return '<h2>এক্সপোর্ট</h2><div class="panel"><h3>ব্যবহারকারীর তালিকা</h3><p class="note">মোট ' + toBn(users.length) + ' জন ব্যবহারকারীর তথ্য CSV ফাইলে নামানো যাবে, যা Excel বা Google Sheets-এ খোলে।</p><div class="actions"><button type="button" class="btn" data-act="csv">CSV ডাউনলোড</button></div></div>';
+  }
+
+  /* ---------- কাজ ---------- */
+  function needConfirm(btn, key, label) {
+    if (confirmKey === key) { confirmKey = null; return true; }
+    confirmKey = key; var old = btn.textContent; btn.textContent = label || 'আবার চাপুন, নিশ্চিত';
+    setTimeout(function () { if (confirmKey === key) { confirmKey = null; if (btn.isConnected) btn.textContent = old; } }, 3500);
+    return false;
+  }
+  $('a-body').addEventListener('input', function (e) { if (e.target.id === 'a-q') { query = e.target.value; drawUsers(); } });
+  $('a-body').addEventListener('click', async function (e) {
+    var b = e.target.closest('[data-act]'); if (!b) return;
+    var act = b.getAttribute('data-act'), id = b.getAttribute('data-id'), v = function (x) { return $(x).value; };
+    var res;
+    if (act === 'edit-user') { var u = users.filter(function (x) { return x.id === id; })[0]; $('a-edit').innerHTML = userForm(u); $('a-edit').scrollIntoView({ block: 'nearest' }); }
+    else if (act === 'cancel-edit') $('a-edit').innerHTML = '';
+    else if (act === 'save-user') {
+      var er = $('e-err'); er.hidden = true;
+      var bal = Number(v('e-balance')), inc = Number(v('e-income')), refs = Math.round(Number(v('e-refs')));
+      if (v('e-name').trim().length < 2) return showErr(er, 'নাম লিখুন।');
+      if (!isFinite(bal) || !isFinite(inc) || !(refs >= 0)) return showErr(er, 'ব্যালেন্স, আয় ও রেফার সংখ্যা সঠিক সংখ্যা দিন।');
+      res = await sb.rpc('admin_update_user', { p_id: id, p_name: v('e-name'), p_email: v('e-email'), p_balance: bal, p_income: inc, p_refs: refs, p_status: v('e-status') });
+      if (res.error) return showErr(er, errText(res.error));
+      toast('সংরক্ষণ হয়েছে'); renderTab();
+    }
+    else if (act === 'set-pass') {
+      var er2 = $('e-err'); er2.hidden = true;
+      if (v('e-pass').length < 6) return showErr(er2, 'নতুন পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।');
+      res = await sb.rpc('admin_set_password', { p_id: id, p_pass: v('e-pass') });
+      if (res.error) return showErr(er2, errText(res.error));
+      $('e-pass').value = ''; toast('পাসওয়ার্ড বদলানো হয়েছে');
+    }
+    else if (act === 'del-user') {
+      if (!needConfirm(b, 'du' + id, 'আবার চাপুন, মুছে যাবে')) return;
+      res = await sb.rpc('admin_delete_user', { p_id: id });
+      if (res.error) return showErr($('e-err'), errText(res.error));
+      toast('ব্যবহারকারী মুছে ফেলা হয়েছে'); renderTab();
+    }
+    else if (act === 'wd-filter') { wdFilter = id; $('a-body').innerHTML = tWds(); }
+    else if (act === 'wd-pay' || act === 'wd-rej') {
+      b.disabled = true;
+      res = await sb.rpc('admin_resolve_withdrawal', { p_id: Number(id), p_action: act === 'wd-pay' ? 'pay' : 'reject' });
+      if (res.error) { b.disabled = false; return toast(errText(res.error)); }
+      toast(act === 'wd-pay' ? 'পরিশোধিত হিসেবে চিহ্নিত হয়েছে' : 'বাতিল হয়েছে, টাকা ফেরত গেছে'); renderTab();
+    }
+    else if (act === 'save-settings') {
+      var bonus = Number(v('s-bonus')), min = Number(v('s-min'));
+      if (!(bonus >= 0) || !(min >= 0)) return toast('বোনাস ও সর্বনিম্ন পরিমাণ সঠিক সংখ্যা দিন');
+      var upd = { site_name: v('s-name').trim() || 'ফান্ডলাইন', bonus: bonus, min_withdraw: min, notice: v('s-notice').trim(), withdraw_on: $('s-wd').checked, reg_on: $('s-reg').checked };
+      res = await sb.from('settings').update(upd).eq('id', 1);
+      if (res.error) return toast(errText(res.error));
+      S = Object.assign(S, upd); applySite(); toast('সেটিংস সংরক্ষণ হয়েছে');
+    }
+    else if (act === 'save-pass') {
+      var pe = $('p-err'); pe.hidden = true;
+      if (v('p-new').length < 6) return showErr(pe, 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।');
+      if (v('p-new') !== v('p-new2')) return showErr(pe, 'দুটি পাসওয়ার্ড মিলছে না।');
+      res = await sb.auth.updateUser({ password: v('p-new') });
+      if (res.error) return showErr(pe, errText(res.error));
+      toast('অ্যাডমিন পাসওয়ার্ড বদলেছে'); renderTab();
+    }
+    else if (act === 'add-card') {
+      var ce = $('c-err'); ce.hidden = true;
+      if (!v('c-title').trim()) return showErr(ce, 'শিরোনাম লিখুন।');
+      res = await sb.from('cards').insert({ title: v('c-title').trim(), value: v('c-value').trim(), hl: $('c-hl').checked });
+      if (res.error) return showErr(ce, errText(res.error));
+      toast('কার্ড যোগ হয়েছে'); renderTab();
+    }
+    else if (act === 'card-toggle') {
+      var c = cards.filter(function (x) { return String(x.id) === id; })[0];
+      res = await sb.from('cards').update({ visible: !c.visible }).eq('id', Number(id));
+      if (res.error) return toast(errText(res.error)); renderTab();
+    }
+    else if (act === 'card-del') {
+      if (!needConfirm(b, 'cd' + id, 'আবার চাপুন')) return;
+      res = await sb.from('cards').delete().eq('id', Number(id));
+      if (res.error) return toast(errText(res.error)); renderTab();
+    }
+    else if (act === 'csv') {
+      function cell(x) { return '"' + String(x == null ? '' : x).replace(/"/g, '""') + '"'; }
+      var lines = [['নাম', 'মোবাইল', 'ইমেইল', 'ব্যালেন্স', 'মোট আয়', 'রেফার', 'কোড', 'অবস্থা', 'যোগদান'].map(cell).join(',')];
+      users.forEach(function (u) { lines.push([u.name, u.phone, u.email, u.balance, u.income, u.refs, u.code, u.status, u.created_at].map(cell).join(',')); });
+      var blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+      var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'users.csv'; document.body.appendChild(a); a.click(); a.remove();
+    }
+  });
+
+  /* ---------- শুরু ---------- */
+  (async function () {
+    var s = await sb.auth.getSession();
+    if (s.data && s.data.session) { var ok = await enter(); if (ok) return; }
+    initGate();
+  })();
+})();
+</script>
+</body>
+</html>
